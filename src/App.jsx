@@ -3,6 +3,8 @@ import './App.css'
 import Login from './components/Login'
 import Register from './components/Register'
 import Profile from './components/Profile'
+import PublishRoom from './components/PublishRoom'
+import MyRooms from './components/MyRooms'
 
 // Componentes de marcador de posición temporal para las rutas
 const Home = () => (
@@ -27,8 +29,9 @@ function App() {
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>UniRoom</Link>
           <nav style={{ display: 'flex', gap: '1rem' }}>
-            <Link to="/login" style={{ fontWeight: '500' }}>Login</Link>
-            <Link to="/register" style={{ fontWeight: '500' }}>Registro</Link>
+            <Link to="/publish" style={{ fontWeight: '500' }}>Publicar</Link>
+            <Link to="/my-rooms" style={{ fontWeight: '500' }}>Mis Anuncios</Link>
+            <Link to="/profile" style={{ fontWeight: '500' }}>Perfil</Link>
           </nav>
         </div>
       </header>
@@ -40,6 +43,8 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/publish" element={<PublishRoom />} />
+            <Route path="/my-rooms" element={<MyRooms />} />
           </Routes>
         </div>
       </main>
