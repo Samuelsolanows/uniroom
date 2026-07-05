@@ -5,22 +5,7 @@ import Register from './components/Register'
 import Profile from './components/Profile'
 import PublishRoom from './components/PublishRoom'
 import MyRooms from './components/MyRooms'
-
-// Componentes de marcador de posición temporal para las rutas
-const Home = () => (
-  <div style={{ padding: '4rem 0', textAlign: 'center' }}>
-    <h1 style={{ fontSize: '3rem', marginBottom: '1rem', color: 'var(--primary)' }}>Bienvenido a UniRoom</h1>
-    <p style={{ fontSize: '1.25rem', color: 'var(--text-secondary)', marginBottom: '2rem' }}>
-      Encuentra tu alojamiento universitario ideal de forma segura.
-    </p>
-    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-      <Link to="/login" className="btn btn-primary">Iniciar Sesión</Link>
-      <Link to="/register" className="btn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-        Registrarse
-      </Link>
-    </div>
-  </div>
-);
+import SearchRooms from './components/SearchRooms'
 
 function App() {
   return (
@@ -39,7 +24,7 @@ function App() {
       <main style={{ flex: 1 }}>
         <div className="container">
           <Routes>
-            <Route path="/" element={<Home />} />
+            <Route path="/" element={<SearchRooms />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/profile" element={<Profile />} />
