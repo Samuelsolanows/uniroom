@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
-import { doc, getDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs } from 'firebase/firestore';
 
 export default function RoomDetails() {
   const { id } = useParams();
@@ -9,6 +9,8 @@ export default function RoomDetails() {
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
 
   useEffect(() => {
     const fetchRoom = async () => {
@@ -17,6 +19,14 @@ export default function RoomDetails() {
         if (roomDoc.exists()) {
           setRoom({ id: roomDoc.id, ...roomDoc.data() });
         }
+        
+        // Fetch reviews
+        const q = query(collection(db, 'reviews'), where('roomId', '==', id));
+        const revSnapshot = await getDocs(q);
+        const revData = revSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+        revData.sort((a, b) => b.createdAt?.toMillis() - a.createdAt?.toMillis());
+        setReviews(revData);
+
       } catch (error) {
         console.error("Error fetching room details:", error);
       } finally {
@@ -73,6 +83,41 @@ export default function RoomDetails() {
       navigate(`/chat/${newChat.id}`);
     } catch (error) {
       console.error("Error al iniciar chat:", error);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleReviewSubmit = async (e) => {
+    e.preventDefault();
+    if (!auth.currentUser) return navigate('/login');
+    if (room.ownerId === auth.currentUser.uid) {
+      alert("No puedes valorar tu propia habitación.");
+      return;
+    }
+
+    try {
+      setActionLoading(true);
+      const docRef = await addDoc(collection(db, 'reviews'), {
+        roomId: room.id,
+        studentId: auth.currentUser.uid,
+        rating: Number(newReview.rating),
+        comment: newReview.comment,
+        createdAt: serverTimestamp()
+      });
+      
+      // Update local state to show immediately
+      setReviews([{ 
+        id: docRef.id, 
+        studentId: auth.currentUser.uid, 
+        rating: Number(newReview.rating), 
+        comment: newReview.comment 
+      }, ...reviews]);
+      
+      setNewReview({ rating: 5, comment: '' });
+    } catch (err) {
+      console.error(err);
+      alert("Error al enviar la reseña");
     } finally {
       setActionLoading(false);
     }
@@ -141,6 +186,58 @@ export default function RoomDetails() {
           </div>
         </div>
       </div>
+
+      {/* --- SECCIÓN DE RESEÑAS --- */}
+      <div className="card" style={{ padding: '2rem', marginTop: '2rem' }}>
+        <h2 style={{ color: 'var(--text-primary)', marginBottom: '1.5rem' }}>Valoraciones y Comentarios</h2>
+        
+        {auth.currentUser && auth.currentUser.uid !== room.ownerId && (
+          <form onSubmit={handleReviewSubmit} style={{ marginBottom: '2rem', padding: '1rem', background: 'var(--surface)', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)' }}>
+            <h4 style={{ marginBottom: '1rem' }}>Deja tu reseña</h4>
+            <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', alignItems: 'center' }}>
+              <label>Calificación:</label>
+              <select className="input" value={newReview.rating} onChange={e => setNewReview({...newReview, rating: e.target.value})} style={{ width: '100px' }}>
+                <option value="5">⭐⭐⭐⭐⭐</option>
+                <option value="4">⭐⭐⭐⭐</option>
+                <option value="3">⭐⭐⭐</option>
+                <option value="2">⭐⭐</option>
+                <option value="1">⭐</option>
+              </select>
+            </div>
+            <textarea 
+              className="input" 
+              rows="3" 
+              placeholder="¿Qué te pareció este lugar?" 
+              required
+              value={newReview.comment}
+              onChange={e => setNewReview({...newReview, comment: e.target.value})}
+              style={{ marginBottom: '1rem' }}
+            ></textarea>
+            <button type="submit" className="btn btn-primary" disabled={actionLoading}>
+              Publicar Reseña
+            </button>
+          </form>
+        )}
+
+        <div>
+          {reviews.length === 0 ? (
+            <p style={{ color: 'var(--text-secondary)' }}>Aún no hay reseñas para esta habitación. ¡Sé el primero!</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {reviews.map(rev => (
+                <div key={rev.id} style={{ padding: '1rem', borderBottom: '1px solid var(--border)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                    <span style={{ fontWeight: 'bold' }}>Usuario: {rev.studentId.substring(0,5)}...</span>
+                    <span>{"⭐".repeat(rev.rating)}</span>
+                  </div>
+                  <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{rev.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

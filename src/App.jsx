@@ -10,6 +10,7 @@ import RoomDetails from './components/RoomDetails'
 import Chat from './components/Chat'
 import Reservations from './components/Reservations'
 import ChatsList from './components/ChatsList'
+import AdminPanel from './components/AdminPanel'
 
 function App() {
   return (
@@ -17,12 +18,13 @@ function App() {
       <header style={{ background: 'var(--surface)', borderBottom: '1px solid var(--border)', padding: '1rem 0' }}>
         <div className="container" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Link to="/" style={{ fontSize: '1.5rem', fontWeight: '700', color: 'var(--primary)' }}>UniRoom</Link>
-          <nav style={{ display: 'flex', gap: '1rem' }}>
+          <nav style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
             <Link to="/publish" style={{ fontWeight: '500' }}>Publicar</Link>
             <Link to="/my-rooms" style={{ fontWeight: '500' }}>Mis Anuncios</Link>
             <Link to="/reservations" style={{ fontWeight: '500' }}>Reservas</Link>
             <Link to="/chats" style={{ fontWeight: '500' }}>Mensajes</Link>
             <Link to="/profile" style={{ fontWeight: '500' }}>Perfil</Link>
+            <Link to="/admin" style={{ fontWeight: '500', color: '#0284c7', fontSize: '0.85rem', padding: '0.25rem 0.5rem', border: '1px solid #0284c7', borderRadius: 'var(--radius-sm)' }}>Admin</Link>
           </nav>
         </div>
       </header>
@@ -40,6 +42,7 @@ function App() {
             <Route path="/chat/:chatId" element={<Chat />} />
             <Route path="/chats" element={<ChatsList />} />
             <Route path="/reservations" element={<Reservations />} />
+            <Route path="/admin" element={<AdminPanel />} />
           </Routes>
         </div>
       </main>

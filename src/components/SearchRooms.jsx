@@ -113,7 +113,12 @@ export default function SearchRooms() {
                   </div>
                 )}
                 <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{room.title}</h4>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', paddingRight: '0.5rem' }}>{room.title}</h4>
+                    {room.verified && (
+                      <span title="Habitación Verificada" style={{ color: '#0284c7', fontSize: '1.2rem' }}>✓</span>
+                    )}
+                  </div>
                   <p style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
                     ${room.price.toLocaleString('es-CO')}
                   </p>
