@@ -6,6 +6,10 @@ import Profile from './components/Profile'
 import PublishRoom from './components/PublishRoom'
 import MyRooms from './components/MyRooms'
 import SearchRooms from './components/SearchRooms'
+import RoomDetails from './components/RoomDetails'
+import Chat from './components/Chat'
+import Reservations from './components/Reservations'
+import ChatsList from './components/ChatsList'
 
 function App() {
   return (
@@ -16,6 +20,8 @@ function App() {
           <nav style={{ display: 'flex', gap: '1rem' }}>
             <Link to="/publish" style={{ fontWeight: '500' }}>Publicar</Link>
             <Link to="/my-rooms" style={{ fontWeight: '500' }}>Mis Anuncios</Link>
+            <Link to="/reservations" style={{ fontWeight: '500' }}>Reservas</Link>
+            <Link to="/chats" style={{ fontWeight: '500' }}>Mensajes</Link>
             <Link to="/profile" style={{ fontWeight: '500' }}>Perfil</Link>
           </nav>
         </div>
@@ -30,6 +36,10 @@ function App() {
             <Route path="/profile" element={<Profile />} />
             <Route path="/publish" element={<PublishRoom />} />
             <Route path="/my-rooms" element={<MyRooms />} />
+            <Route path="/room/:id" element={<RoomDetails />} />
+            <Route path="/chat/:chatId" element={<Chat />} />
+            <Route path="/chats" element={<ChatsList />} />
+            <Route path="/reservations" element={<Reservations />} />
           </Routes>
         </div>
       </main>

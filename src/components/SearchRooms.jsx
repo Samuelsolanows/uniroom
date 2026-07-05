@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import RoomsMap from './RoomsMap';
@@ -119,13 +120,16 @@ export default function SearchRooms() {
                   <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', flex: 1 }}>
                     {room.description.length > 80 ? room.description.substring(0, 80) + '...' : room.description}
                   </p>
-                  <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem' }}>
+                  <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '1rem' }}>
                     {room.services && room.services.map(s => (
                       <span key={s} style={{ background: 'var(--background)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem' }}>
                         {s}
                       </span>
                     ))}
                   </div>
+                  <Link to={`/room/${room.id}`} className="btn btn-primary" style={{ textAlign: 'center', width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}>
+                    Ver Detalles
+                  </Link>
                 </div>
               </div>
             ))}
