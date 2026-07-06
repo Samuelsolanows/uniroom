@@ -81,7 +81,7 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
       position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
       background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)',
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      zIndex: 1000, padding: '1rem'
+      zIndex: 99999, padding: '1rem'
     }}>
       <div style={{
         background: 'var(--surface)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '400px',
