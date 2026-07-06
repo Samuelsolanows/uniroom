@@ -27,6 +27,17 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
 
   const handleAuth = async (e) => {
     e.preventDefault();
+    
+    if (!email || !password) {
+      toast.error('Por favor ingresa tu correo y contraseña');
+      return;
+    }
+    
+    if (view === 'register' && !name) {
+      toast.error('Por favor ingresa tu nombre completo');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -85,7 +96,8 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
     }}>
       <div style={{
         background: 'var(--surface)', borderRadius: 'var(--radius-lg)', width: '100%', maxWidth: '400px',
-        position: 'relative', overflow: 'hidden', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
+        maxHeight: '95vh', overflowY: 'auto',
+        position: 'relative', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.1)'
       }} className="animation-zoomIn">
         
         <button 
@@ -118,7 +130,6 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
                     placeholder="Tu nombre" 
                     value={name} 
                     onChange={e => setName(e.target.value)} 
-                    required 
                     style={{ paddingLeft: '2.5rem', margin: 0 }}
                   />
                 </div>
@@ -135,7 +146,6 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
                   placeholder="correo@ejemplo.com" 
                   value={email} 
                   onChange={e => setEmail(e.target.value)} 
-                  required 
                   style={{ paddingLeft: '2.5rem', margin: 0 }}
                 />
               </div>
@@ -151,7 +161,6 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
                   placeholder="••••••••" 
                   value={password} 
                   onChange={e => setPassword(e.target.value)} 
-                  required 
                   style={{ paddingLeft: '2.5rem', margin: 0 }}
                 />
               </div>
