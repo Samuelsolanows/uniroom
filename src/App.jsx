@@ -33,7 +33,7 @@ function App() {
 
   return (
     <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Toaster position="top-right" />
+      <Toaster position="top-right" containerStyle={{ zIndex: 999999 }} />
       <Suspense fallback={null}>
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView={authModalInitialView} />
       </Suspense>
