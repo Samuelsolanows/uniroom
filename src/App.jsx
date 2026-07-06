@@ -10,7 +10,7 @@ const Register = lazy(() => import('./components/Register'));
 const Profile = lazy(() => import('./components/Profile'));
 const PublishRoom = lazy(() => import('./components/PublishRoom'));
 const MyRooms = lazy(() => import('./components/MyRooms'));
-const SearchRooms = lazy(() => import('./components/SearchRooms'));
+import SearchRooms from './components/SearchRooms';
 const RoomDetails = lazy(() => import('./components/RoomDetails'));
 const Chat = lazy(() => import('./components/Chat'));
 const Reservations = lazy(() => import('./components/Reservations'));
