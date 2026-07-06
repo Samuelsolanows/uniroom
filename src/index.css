@@ -1,32 +1,44 @@
 :root {
-  /* Modern Premium Palette */
-  --primary: #4f46e5;       /* Indigo 600 */
-  --primary-hover: #4338ca; /* Indigo 700 */
-  --primary-light: #e0e7ff; /* Indigo 100 */
+  /* University Palette */
+  --primary: #ad3333;       /* Crimson Red (University) */
+  --primary-hover: #902929; /* Darker Red */
+  --primary-light: #fbebeb; /* Very light red for backgrounds */
   
-  --accent: #ec4899;        /* Pink 500 */
+  --secondary: #003366;     /* Navy Blue (University) */
+  --secondary: #003366;     /* Navy Blue (University) */
+  --secondary-hover: #002244;
   
-  --background: #f8fafc;    /* Slate 50 */
+  --background: #f7f7f9;    /* Less saturated, modern white */
   --surface: #ffffff;
   
-  --text-primary: #0f172a;  /* Slate 900 */
-  --text-secondary: #475569;/* Slate 600 */
-  --text-muted: #94a3b8;    /* Slate 400 */
+  --text-primary: #222222;  /* Almost black for high contrast */
+  --text-secondary: #717171;/* Gray for subtitles */
+  --text-muted: #a3a3a3;
   
-  --border: #e2e8f0;        /* Slate 200 */
+  --border: #DADADA;        /* University Light Gray */
+  --border-light: #ebebeb;
+  
+  /* Semantic Status Colors */
+  --success-bg: #e6f4ea;
+  --success-text: #137333;
+  --error-bg: var(--primary-light);
+  --error-text: var(--primary);
+  --warning-bg: #fef7e0;
+  --warning-text: #b06000;
+  --info-bg: #e8f0fe;
+  --info-text: var(--secondary);
   
   /* Modern Radius */
   --radius-sm: 0.5rem;
   --radius-md: 0.75rem;
-  --radius-lg: 1.25rem;
+  --radius-lg: 1rem;
   --radius-xl: 1.5rem;
   --radius-full: 9999px;
 
-  /* Premium Shadows */
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  /* Airbnb Style Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 12px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 6px 16px rgba(0, 0, 0, 0.12);
+  --shadow-hover: 0 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 * {
@@ -36,10 +48,10 @@
 }
 
 body {
-  font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  font-family: 'Circular', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   background-color: var(--background);
   color: var(--text-primary);
-  line-height: 1.6;
+  line-height: 1.43;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -49,118 +61,371 @@ body {
   min-height: 100vh;
 }
 
-/* Glassmorphism Header */
+/* Header - Airbnb Style */
 header {
-  background: rgba(255, 255, 255, 0.7) !important;
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+  background: var(--surface) !important;
+  border-bottom: 1px solid var(--border-light) !important;
   position: sticky;
   top: 0;
   z-index: 1000;
-  box-shadow: var(--shadow-sm);
-  transition: all 0.3s ease;
+  padding: 1rem 0 !important;
 }
 
 header nav a {
-  color: var(--text-secondary);
+  color: var(--text-primary);
   text-decoration: none;
-  font-weight: 500;
+  font-weight: 600;
   transition: all 0.2s ease;
-  padding: 0.5rem 0.75rem;
-  border-radius: var(--radius-sm);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-full);
 }
 
 header nav a:hover {
-  color: var(--primary);
-  background: var(--primary-light);
+  background: #f7f7f7;
 }
 
 /* Base Layouts */
 .container {
   width: 100%;
-  max-width: 1100px;
+  max-width: 1280px; /* Wider container for photo grids */
   margin: 0 auto;
   padding: 0 1.5rem;
 }
 
-/* Premium Cards */
+/* Generic Cards */
 .card {
   background: var(--surface);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md);
   border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Property Cards (Airbnb Style Grid) */
+.room-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 2rem 1.5rem;
+}
+
+.room-card {
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.card:hover {
-  transform: translateY(-6px);
-  box-shadow: var(--shadow-hover);
+.room-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
 }
 
-/* Buttons with Micro-animations */
+.room-card-img-wrapper {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.room-card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Floating Reservation Box (Airbnb Details) */
+.reservation-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: var(--shadow-md);
+  position: sticky;
+  top: 100px; /* Sticks below header */
+}
+
+.leaflet-popup-content {
+  font-family: inherit;
+}
+
+.custom-popup .leaflet-popup-content-wrapper {
+  padding: 0 !important;
+  border-radius: var(--radius-lg) !important;
+  overflow: hidden !important;
+}
+
+.custom-popup .leaflet-popup-content {
+  margin: 0 !important;
+  width: 220px !important;
+}
+
+.custom-popup .room-card {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* Standard Buttons */
 .btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 0.6rem 1.25rem;
-  font-size: 0.95rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
   font-weight: 600;
   font-family: inherit;
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
   text-decoration: none;
 }
 
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
 .btn:active {
-  transform: scale(0.96);
+  transform: translateY(0) scale(0.96);
+  box-shadow: none;
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, var(--primary) 0%, #3b82f6 100%);
+  background: var(--primary);
   color: white;
-  box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.3);
 }
 
 .btn-primary:hover {
-  background: linear-gradient(135deg, var(--primary-hover) 0%, #2563eb 100%);
-  box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.4);
-  transform: translateY(-2px);
+  background: var(--primary-hover);
+}
+
+.btn-secondary {
+  background: var(--secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--secondary-hover);
+}
+
+/* Search Pill (Header) */
+.search-pill {
+  display: flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+  padding: 0.5rem 1rem;
+  transition: box-shadow 0.2s ease;
+  background: var(--surface);
+  width: 100%;
+  max-width: 850px;
+}
+
+.search-pill-divider {
+  border-right: 1px solid var(--border);
+}
+
+.search-pill-section {
+  flex: 1;
+  padding: 0 1rem;
+}
+
+.search-pill-action {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.search-pill:hover {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.18);
 }
 
 /* Inputs */
 .input {
   width: 100%;
   padding: 0.75rem 1rem;
-  border: 1.5px solid var(--border);
+  border: 1px solid var(--border-light);
   border-radius: var(--radius-md);
   font-family: inherit;
   font-size: 1rem;
-  transition: all 0.2s ease;
-  background-color: #fcfcfd;
+  transition: border-color 0.2s ease;
+  background-color: var(--surface);
+  color: var(--text-primary);
 }
 
 .input:focus {
   outline: none;
-  border-color: var(--primary);
-  box-shadow: 0 0 0 4px var(--primary-light);
-  background-color: var(--surface);
+  border-color: var(--text-primary);
+  border-width: 2px;
+  padding: calc(0.75rem - 1px) calc(1rem - 1px); /* Prevent layout shift */
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-  width: 8px;
+/* Utilities */
+.text-truncate {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
-::-webkit-scrollbar-track {
-  background: var(--background);
+
+/* Header Links Hover Animation */
+header nav a, header nav button {
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s ease, opacity 0.2s ease !important;
+  display: inline-block;
 }
-::-webkit-scrollbar-thumb {
-  background: var(--text-muted);
-  border-radius: var(--radius-full);
+
+header nav a:hover, header nav button:hover {
+  transform: translateY(-2px);
+  opacity: 0.85;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: var(--text-secondary);
+
+header nav a:active, header nav button:active {
+  transform: translateY(0) scale(0.95);
+}
+
+/* =========================================
+   RESPONSIVE (MÓVILES)
+========================================= */
+
+.mobile-menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  padding: 0.5rem;
+}
+
+.mobile-drawer {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 280px;
+  height: 100vh;
+  background: var(--surface);
+  box-shadow: -5px 0 15px rgba(0,0,0,0.1);
+  z-index: 10001;
+  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+.mobile-drawer.open {
+  right: 0;
+}
+
+.mobile-drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.4);
+  backdrop-filter: blur(2px);
+  z-index: 10000;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-drawer-overlay.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.desktop-nav {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.mobile-nav-links a, .mobile-nav-links button {
+  text-decoration: none !important;
+  -webkit-tap-highlight-color: transparent;
+  color: var(--primary) !important;
+}
+
+@media (max-width: 768px) {
+  .desktop-nav {
+    display: none !important;
+  }
+  
+  .mobile-menu-btn {
+    display: flex !important;
+  }
+
+  .container {
+    padding: 0 1rem;
+  }
+
+  .rooms-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1.5rem;
+  }
+
+  .card {
+    padding: 1.25rem !important;
+  }
+
+  /* Utils para colapsar grillas en 1 columna */
+  .grid-mobile-1 {
+    grid-template-columns: 1fr !important;
+  }
+  
+  .flex-mobile-col {
+    flex-direction: column !important;
+    height: auto !important;
+  }
+  .flex-mobile-col > div:first-child {
+    width: 100% !important;
+    height: 200px !important;
+  }
+
+  .reservation-box {
+    position: relative !important;
+    top: 0 !important;
+    margin-top: 2rem;
+  }
+
+  .search-pill {
+    flex-direction: column;
+    border-radius: var(--radius-lg);
+    padding: 1rem;
+    gap: 1rem;
+  }
+  .search-pill-divider {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 1rem;
+  }
+  .search-pill-section {
+    width: 100%;
+    padding: 0;
+  }
+  .search-pill-action {
+    width: 100%;
+    padding: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  .search-pill-btn {
+    width: 100%;
+  }
 }

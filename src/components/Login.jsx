@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
+import toast from 'react-hot-toast';
 import { doc, getDoc } from 'firebase/firestore';
 
 export default function Login() {
@@ -17,18 +18,10 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
-      const user = userCredential.user;
+      await signInWithEmailAndPassword(auth, email, password);
+      toast.success("¡Bienvenido de nuevo!");
       
-      // Optionally fetch user profile to check role or status
-      const docRef = doc(db, 'users', user.uid);
-      const docSnap = await getDoc(docRef);
-      
-      if (docSnap.exists()) {
-        console.log("Rol:", docSnap.data().role);
-      }
-      
-      navigate('/profile');
+      navigate('/');
     } catch (err) {
       setError('Credenciales inválidas o error de conexión. Intenta de nuevo.');
       console.error(err);

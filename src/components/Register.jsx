@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
+import toast from 'react-hot-toast';
 
 export default function Register() {
   const [name, setName] = useState('');
@@ -15,6 +16,10 @@ export default function Register() {
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (password !== confirmPassword) {
+      toast.error("Las contraseñas no coinciden");
+      return;
+    }
     setError('');
     setLoading(true);
 
@@ -31,9 +36,10 @@ export default function Register() {
         createdAt: new Date().toISOString()
       });
       
-      navigate('/profile');
+      toast.success("Cuenta creada exitosamente");
+      navigate('/');
     } catch (err) {
-      setError(`Error: ${err.message}`);
+      toast.error(`Error: ${err.message}`);
       console.error(err);
     } finally {
       setLoading(false);
