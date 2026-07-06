@@ -1,11 +1,36 @@
 import { useState, useEffect } from 'react';
 import { auth, db } from '../firebase';
-import { collection, query, where, getDocs, doc, updateDoc, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, doc, updateDoc, onSnapshot, getDocs } from 'firebase/firestore';
+import { useAuth } from '../hooks/useAuth';
+import { Calendar, Clock, CheckCircle, XCircle, Ban } from 'lucide-react';
 
 export default function Reservations() {
+  const { userData, isAdmin } = useAuth();
   const [reservations, setReservations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState('received'); // 'received' (owner) or 'sent' (student)
+  const [view, setView] = useState('received');
+
+  const [usersMap, setUsersMap] = useState({});
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const snap = await getDocs(collection(db, 'users'));
+        const map = {};
+        snap.forEach(u => map[u.id] = u.data().name || u.id.substring(0, 5));
+        setUsersMap(map);
+      } catch (err) {
+        console.error("Error fetching users map", err);
+      }
+    };
+    fetchUsers();
+  }, []);
+
+  useEffect(() => {
+    if (userData) {
+      setView(userData.role === 'propietario' || isAdmin ? 'received' : 'sent');
+    }
+  }, [userData, isAdmin]);
 
   useEffect(() => {
     if (!auth.currentUser) return;
@@ -43,23 +68,27 @@ export default function Reservations() {
   return (
     <div className="container" style={{ padding: '3rem 0' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
-        <h2 style={{ color: 'var(--primary)' }}>Gestión de Reservas</h2>
-        <div style={{ display: 'flex', gap: '0.5rem' }}>
-          <button 
-            className="btn" 
-            style={{ background: view === 'received' ? 'var(--primary)' : 'var(--surface)', color: view === 'received' ? 'white' : 'var(--text-primary)' }}
-            onClick={() => setView('received')}
-          >
-            Recibidas (Propietario)
-          </button>
-          <button 
-            className="btn" 
-            style={{ background: view === 'sent' ? 'var(--primary)' : 'var(--surface)', color: view === 'sent' ? 'white' : 'var(--text-primary)' }}
-            onClick={() => setView('sent')}
-          >
-            Mis Solicitudes (Estudiante)
-          </button>
-        </div>
+        <h2 style={{ color: 'var(--primary)' }}>
+          {view === 'received' ? 'Reservas Recibidas' : 'Mis Solicitudes'}
+        </h2>
+        {isAdmin && (
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <button 
+              className="btn" 
+              style={{ background: view === 'received' ? 'var(--primary)' : 'var(--surface)', color: view === 'received' ? 'white' : 'var(--text-primary)' }}
+              onClick={() => setView('received')}
+            >
+              Recibidas
+            </button>
+            <button 
+              className="btn" 
+              style={{ background: view === 'sent' ? 'var(--primary)' : 'var(--surface)', color: view === 'sent' ? 'white' : 'var(--text-primary)' }}
+              onClick={() => setView('sent')}
+            >
+              Enviadas
+            </button>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -70,36 +99,69 @@ export default function Reservations() {
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {reservations.map(res => (
-            <div key={res.id} className="card" style={{ padding: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-              <div>
-                <h3 style={{ fontSize: '1.2rem', marginBottom: '0.25rem' }}>{res.roomTitle}</h3>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-                  {view === 'received' ? `Solicitada por el estudiante: ${res.studentId}` : `Propietario ID: ${res.ownerId}`}
-                </p>
-              </div>
-              
-              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                <span style={{ 
-                  padding: '0.25rem 0.75rem', borderRadius: 'var(--radius-full)', fontWeight: '600', fontSize: '0.85rem',
-                  background: res.status === 'aprobada' ? '#dcfce7' : res.status === 'rechazada' ? '#fee2e2' : '#fef9c3',
-                  color: res.status === 'aprobada' ? '#166534' : res.status === 'rechazada' ? '#991b1b' : '#854d0e'
-                }}>
-                  {res.status.toUpperCase()}
-                </span>
-                
-                {view === 'received' && res.status === 'pendiente' && (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn" style={{ background: '#22c55e', color: 'white' }} onClick={() => handleUpdateStatus(res.id, 'aprobada')}>Aprobar</button>
-                    <button className="btn" style={{ background: '#ef4444', color: 'white' }} onClick={() => handleUpdateStatus(res.id, 'rechazada')}>Rechazar</button>
+          {reservations.map(res => {
+            const isApproved = res.status === 'aprobada';
+            const isRejected = res.status === 'rechazada';
+            const isCancelled = res.status === 'cancelada';
+            const isPending = res.status === 'pendiente';
+
+            const StatusIcon = isApproved ? CheckCircle : isRejected ? XCircle : isCancelled ? Ban : Clock;
+            
+            return (
+              <div key={res.id} style={{ 
+                background: 'var(--surface)', 
+                borderRadius: 'var(--radius-lg)', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                overflow: 'hidden', 
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                border: '1px solid var(--border)'
+              }}>
+                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                  {/* Left Ticket Side */}
+                  <div style={{ flex: '1 1 60%', padding: '1.5rem', borderRight: '2px dashed var(--border)', position: 'relative' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', color: 'var(--primary)' }}>
+                      <Calendar size={18} />
+                      <span style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>
+                        {res.createdAt ? new Date(res.createdAt.toMillis()).toLocaleDateString() : 'Reciente'}
+                      </span>
+                    </div>
+                    <h3 style={{ fontSize: '1.3rem', marginBottom: '0.5rem', color: 'var(--text-primary)' }}>{res.roomTitle}</h3>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.95rem', margin: 0 }}>
+                      {view === 'received' 
+                        ? `Solicitado por: ${usersMap[res.studentId] || res.studentId.substring(0,5)}` 
+                        : `Propietario: ${usersMap[res.ownerId] || res.ownerId.substring(0,5)}`}
+                    </p>
                   </div>
-                )}
-                {view === 'sent' && res.status === 'pendiente' && (
-                  <button className="btn" style={{ background: '#ef4444', color: 'white' }} onClick={() => handleUpdateStatus(res.id, 'cancelada')}>Cancelar Solicitud</button>
-                )}
+                  
+                  {/* Right Ticket Side */}
+                  <div style={{ flex: '1 1 40%', padding: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1rem', background: '#f8fafc' }}>
+                    <div style={{ 
+                      display: 'flex', alignItems: 'center', gap: '0.4rem',
+                      padding: '0.4rem 1rem', borderRadius: 'var(--radius-full)', fontWeight: 'bold', fontSize: '0.9rem',
+                      background: isApproved ? 'var(--success-bg)' : (isRejected || isCancelled) ? 'var(--error-bg)' : 'var(--warning-bg)',
+                      color: isApproved ? 'var(--success-text)' : (isRejected || isCancelled) ? 'var(--error-text)' : 'var(--warning-text)'
+                    }}>
+                      <StatusIcon size={18} />
+                      {res.status.toUpperCase()}
+                    </div>
+                    
+                    <div style={{ display: 'flex', gap: '0.5rem', width: '100%', justifyContent: 'center' }}>
+                      {view === 'received' && isPending && (
+                        <>
+                          <button className="btn" style={{ background: 'var(--success-text)', color: 'white', flex: 1, padding: '0.5rem' }} onClick={() => handleUpdateStatus(res.id, 'aprobada')}>Aprobar</button>
+                          <button className="btn" style={{ background: 'var(--primary)', color: 'white', flex: 1, padding: '0.5rem' }} onClick={() => handleUpdateStatus(res.id, 'rechazada')}>Rechazar</button>
+                        </>
+                      )}
+                      {view === 'sent' && isPending && (
+                        <button className="btn" style={{ background: 'var(--primary)', color: 'white', width: '100%', padding: '0.5rem' }} onClick={() => handleUpdateStatus(res.id, 'cancelada')}>Cancelar</button>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

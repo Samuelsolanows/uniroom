@@ -2,12 +2,14 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
+import { Send, ArrowLeft, User } from 'lucide-react';
 
 export default function Chat() {
   const { chatId } = useParams();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [chatInfo, setChatInfo] = useState(null);
+  const [otherUser, setOtherUser] = useState(null);
   const messagesEndRef = useRef(null);
 
   // Fetch chat info
@@ -15,7 +17,16 @@ export default function Chat() {
     const fetchChatInfo = async () => {
       const docSnap = await getDoc(doc(db, 'chats', chatId));
       if (docSnap.exists()) {
-        setChatInfo({ id: docSnap.id, ...docSnap.data() });
+        const data = docSnap.data();
+        setChatInfo({ id: docSnap.id, ...data });
+        
+        if (auth.currentUser) {
+          const otherId = data.ownerId === auth.currentUser.uid ? data.studentId : data.ownerId;
+          const otherUserSnap = await getDoc(doc(db, 'users', otherId));
+          if (otherUserSnap.exists()) {
+            setOtherUser(otherUserSnap.data());
+          }
+        }
       }
     };
     fetchChatInfo();
@@ -60,47 +71,98 @@ export default function Chat() {
     }
   };
 
-  if (!auth.currentUser) return <div className="container" style={{ padding: '3rem 0', textAlign: 'center' }}>Debes iniciar sesión.</div>;
+  if (!chatInfo || !auth.currentUser) return <div className="container" style={{ padding: '3rem 0', textAlign: 'center' }}>Cargando chat...</div>;
+
+  const isOwner = chatInfo.ownerId === auth.currentUser.uid;
 
   return (
-    <div className="container" style={{ padding: '2rem 0', maxWidth: '800px', height: 'calc(100vh - 80px)', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ padding: '1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--radius-lg) var(--radius-lg) 0 0', display: 'flex', alignItems: 'center', gap: '1rem' }}>
-        <Link to="/" style={{ color: 'var(--primary)', textDecoration: 'none' }}>&larr; Volver</Link>
-        <h2 style={{ fontSize: '1.2rem', margin: 0 }}>
-          {chatInfo ? `Chat sobre: ${chatInfo.roomTitle}` : 'Cargando chat...'}
-        </h2>
+    <div style={{ display: 'flex', flexDirection: 'column', height: 'calc(100vh - 60px)', background: '#efeae2' }}>
+      {/* Header */}
+      <div style={{ background: 'var(--surface)', padding: '1rem', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: '1rem', zIndex: 10 }}>
+        <Link to="/chats" style={{ color: 'var(--primary)', textDecoration: 'none', display: 'flex', alignItems: 'center' }}>
+          <ArrowLeft size={24} />
+        </Link>
+        
+        <div style={{ width: '40px', height: '40px', borderRadius: '50%', overflow: 'hidden', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {otherUser?.photoUrl ? (
+            <img src={otherUser.photoUrl} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <User size={20} color="var(--text-muted)" />
+          )}
+        </div>
+        
+        <div>
+          <h2 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>
+            {otherUser?.name || 'Usuario'}
+          </h2>
+          <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+            {isOwner ? 'Interesado en:' : 'Propietario de:'} <Link to={`/room/${chatInfo.roomId}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{chatInfo.roomTitle}</Link>
+          </p>
+        </div>
       </div>
 
-      <div style={{ flex: 1, background: 'var(--background)', borderLeft: '1px solid var(--border)', borderRight: '1px solid var(--border)', padding: '1rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-        {messages.map(msg => {
-          const isMine = msg.senderId === auth.currentUser.uid;
-          return (
-            <div key={msg.id} style={{ alignSelf: isMine ? 'flex-end' : 'flex-start', maxWidth: '70%' }}>
-              <div style={{ 
-                background: isMine ? 'var(--primary)' : 'var(--surface)', 
-                color: isMine ? 'white' : 'var(--text-primary)',
-                padding: '0.75rem 1rem', 
-                borderRadius: isMine ? '1rem 1rem 0 1rem' : '1rem 1rem 1rem 0',
-                border: isMine ? 'none' : '1px solid var(--border)'
+      {/* Messages */}
+      <div style={{ flex: 1, padding: '1.5rem', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+        {messages.length === 0 ? (
+          <div style={{ textAlign: 'center', margin: 'auto', background: 'rgba(255,255,255,0.7)', padding: '1rem', borderRadius: 'var(--radius-lg)' }}>
+            <p style={{ margin: 0, color: 'var(--text-secondary)' }}>No hay mensajes todavía.</p>
+            <p style={{ margin: 0, fontSize: '0.9rem', color: 'var(--text-muted)' }}>Envía un mensaje para comenzar la conversación.</p>
+          </div>
+        ) : (
+          messages.map(msg => {
+            const isMe = msg.senderId === auth.currentUser.uid;
+            return (
+              <div key={msg.id} style={{ 
+                alignSelf: isMe ? 'flex-end' : 'flex-start',
+                maxWidth: '75%',
+                background: isMe ? '#d9fdd3' : 'var(--surface)',
+                padding: '0.5rem 1rem',
+                borderRadius: '12px',
+                borderTopRightRadius: isMe ? '0px' : '12px',
+                borderTopLeftRadius: !isMe ? '0px' : '12px',
+                boxShadow: '0 1px 1px rgba(0,0,0,0.1)',
+                position: 'relative'
               }}>
-                {msg.text}
+                <p style={{ margin: 0, color: 'var(--text-primary)', wordBreak: 'break-word', fontSize: '0.95rem' }}>{msg.text}</p>
+                <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', display: 'block', textAlign: 'right', marginTop: '0.2rem' }}>
+                  {msg.createdAt ? new Date(msg.createdAt.toMillis()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : ''}
+                </span>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '0.5rem', padding: '1rem', background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '0 0 var(--radius-lg) var(--radius-lg)' }}>
-        <input 
-          type="text" 
-          className="input" 
-          placeholder="Escribe un mensaje..." 
+      {/* Input Form */}
+      <form onSubmit={handleSendMessage} style={{ padding: '1rem', background: 'var(--surface)', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <input
+          type="text"
+          className="input"
+          placeholder="Escribe un mensaje..."
           value={newMessage}
-          onChange={e => setNewMessage(e.target.value)}
-          style={{ flex: 1 }}
+          onChange={(e) => setNewMessage(e.target.value)}
+          style={{ flex: 1, borderRadius: 'var(--radius-full)', padding: '0.75rem 1.25rem', margin: 0, border: 'none', background: '#f0f2f5' }}
         />
-        <button type="submit" className="btn btn-primary">Enviar</button>
+        <button 
+          type="submit" 
+          disabled={!newMessage.trim()} 
+          style={{ 
+            background: newMessage.trim() ? 'var(--primary)' : 'var(--border)', 
+            color: 'white', 
+            border: 'none', 
+            borderRadius: '50%', 
+            width: '45px', 
+            height: '45px', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center',
+            cursor: newMessage.trim() ? 'pointer' : 'default',
+            transition: 'background 0.2s'
+          }}
+        >
+          <Send size={20} />
+        </button>
       </form>
     </div>
   );

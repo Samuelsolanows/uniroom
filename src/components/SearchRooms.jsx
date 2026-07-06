@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import RoomsMap from './RoomsMap';
+import { Star, CheckCircle2 } from 'lucide-react';
 
 export default function SearchRooms() {
   const [allRooms, setAllRooms] = useState([]);
@@ -10,13 +11,10 @@ export default function SearchRooms() {
   const [loading, setLoading] = useState(true);
 
   // Filters state
+  const [searchTerm, setSearchTerm] = useState('');
   const [maxPrice, setMaxPrice] = useState('');
-  const [services, setServices] = useState({
-    wifi: false,
-    bano_privado: false,
-    cocina: false,
-    amoblado: false
-  });
+  const [selectedService, setSelectedService] = useState('');
+  const [showMap, setShowMap] = useState(false);
 
   useEffect(() => {
     const fetchAvailableRooms = async () => {
@@ -24,8 +22,35 @@ export default function SearchRooms() {
         const q = query(collection(db, 'rooms'), where('status', '==', 'disponible'));
         const querySnapshot = await getDocs(q);
         const roomsData = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setAllRooms(roomsData);
-        setFilteredRooms(roomsData);
+
+        const usersSnapshot = await getDocs(collection(db, 'users'));
+        const usersMap = {};
+        usersSnapshot.forEach(userDoc => {
+          usersMap[userDoc.id] = userDoc.data().name || userDoc.id.substring(0, 6);
+        });
+
+        const reviewsSnapshot = await getDocs(collection(db, 'reviews'));
+        const ratingsMap = {};
+        reviewsSnapshot.forEach(rev => {
+          const d = rev.data();
+          if(!ratingsMap[d.roomId]) ratingsMap[d.roomId] = { sum: 0, count: 0 };
+          ratingsMap[d.roomId].sum += d.rating;
+          ratingsMap[d.roomId].count += 1;
+        });
+
+        const enrichedRooms = roomsData.map(room => ({
+          ...room,
+          ownerName: usersMap[room.ownerId] || room.ownerId.substring(0, 6),
+          averageRating: ratingsMap[room.id] ? (ratingsMap[room.id].sum / ratingsMap[room.id].count).toFixed(1) : null
+        }));
+
+        enrichedRooms.sort((a, b) => {
+          const timeA = a.createdAt?.toMillis ? a.createdAt.toMillis() : new Date(a.createdAt || 0).getTime();
+          const timeB = b.createdAt?.toMillis ? b.createdAt.toMillis() : new Date(b.createdAt || 0).getTime();
+          return timeB - timeA;
+        });
+        setAllRooms(enrichedRooms);
+        setFilteredRooms(enrichedRooms);
       } catch (err) {
         console.error("Error fetching rooms:", err);
       } finally {
@@ -38,109 +63,133 @@ export default function SearchRooms() {
   useEffect(() => {
     let result = allRooms;
 
+    if (searchTerm) {
+      result = result.filter(room => 
+        room.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+        room.description.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
     if (maxPrice && Number(maxPrice) > 0) {
       result = result.filter(room => room.price <= Number(maxPrice));
     }
 
-    const activeServices = Object.keys(services).filter(key => services[key]);
-    if (activeServices.length > 0) {
-      result = result.filter(room => {
-        if (!room.services) return false;
-        return activeServices.every(service => room.services.includes(service));
-      });
+    if (selectedService) {
+      result = result.filter(room => room.services && room.services.includes(selectedService));
     }
 
     setFilteredRooms(result);
-  }, [allRooms, maxPrice, services]);
-
-  const handleServiceChange = (e) => {
-    setServices({
-      ...services,
-      [e.target.name]: e.target.checked
-    });
-  };
+  }, [allRooms, maxPrice, searchTerm, selectedService]);
 
   if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Buscando alojamientos...</div>;
 
   return (
-    <div className="container" style={{ padding: '2rem 0' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 3fr', gap: '2rem' }}>
-        
-        {/* Sidebar: Filters */}
-        <div className="card" style={{ padding: '1.5rem', height: 'fit-content' }}>
-          <h3 style={{ marginBottom: '1.5rem', color: 'var(--primary)' }}>Filtros</h3>
-          
-          <div style={{ marginBottom: '1.5rem' }}>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Precio Máximo (COP)</label>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '2rem 0' }}>
+      
+      {/* Buscador Estilo Airbnb (barra de busqueda) */}
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '1rem' }}>
+        <div className="search-pill">
+          <div className="search-pill-section search-pill-divider">
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-primary)', paddingLeft: '0.5rem' }}>Dónde</label>
             <input 
-              type="number" 
-              className="input" 
-              placeholder="Ej: 500000" 
-              value={maxPrice}
-              onChange={e => setMaxPrice(e.target.value)}
+              type="text" 
+              placeholder="Buscar título o descripción" 
+              style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', padding: '0.25rem 0.5rem', fontSize: '0.95rem' }}
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Servicios Necesarios</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-              <label><input type="checkbox" name="wifi" checked={services.wifi} onChange={handleServiceChange} /> WiFi</label>
-              <label><input type="checkbox" name="bano_privado" checked={services.bano_privado} onChange={handleServiceChange} /> Baño Privado</label>
-              <label><input type="checkbox" name="cocina" checked={services.cocina} onChange={handleServiceChange} /> Cocina</label>
-              <label><input type="checkbox" name="amoblado" checked={services.amoblado} onChange={handleServiceChange} /> Amoblado</label>
+          <div className="search-pill-section search-pill-divider">
+            <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-primary)', paddingLeft: '0.5rem' }}>Presupuesto</label>
+            <input 
+              type="number" 
+              placeholder="Precio máximo ($)" 
+              style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', padding: '0.25rem 0.5rem', fontSize: '0.95rem' }}
+              value={maxPrice}
+              onChange={(e) => setMaxPrice(e.target.value)}
+            />
+          </div>
+          <div className="search-pill-section search-pill-action">
+            <div style={{ flex: 1 }}>
+              <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 'bold', color: 'var(--text-primary)', paddingLeft: '0.5rem' }}>Filtros</label>
+              <select 
+                style={{ width: '100%', border: 'none', outline: 'none', background: 'transparent', padding: '0.25rem 0.5rem', fontSize: '0.95rem', color: 'var(--text-secondary)' }}
+                value={selectedService}
+                onChange={(e) => setSelectedService(e.target.value)}
+              >
+                <option value="">Cualquier servicio</option>
+                <option value="wifi">WiFi</option>
+                <option value="cocina">Cocina Compartida</option>
+                <option value="bano_privado">Baño Privado</option>
+                <option value="amoblado">Amoblado</option>
+              </select>
             </div>
+            <button className="btn btn-primary search-pill-btn" style={{ borderRadius: 'var(--radius-full)', padding: '0.75rem 1.5rem', display: 'flex', justifyContent: 'center' }}>
+              Buscar
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Main Content: Map & List */}
-        <div>
-          <div style={{ marginBottom: '2rem' }}>
+      <div className="container" style={{ position: 'relative' }}>
+        
+        {/* Floating Map Toggle Button */}
+        <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
+          <button 
+            className="btn" 
+            style={{ background: 'var(--text-primary)', color: 'white', borderRadius: 'var(--radius-full)', padding: '0.75rem 1.5rem', boxShadow: 'var(--shadow-lg)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+            onClick={() => setShowMap(!showMap)}
+          >
+            {showMap ? (
+              <><span>≡</span> Mostrar lista</>
+            ) : (
+              <><span>🗺️</span> Mostrar mapa</>
+            )}
+          </button>
+        </div>
+
+        {filteredRooms.length === 0 ? (
+          <div className="card" style={{ padding: '3rem', textAlign: 'center', color: 'var(--text-secondary)' }}>
+            No se encontraron habitaciones con esos filtros.
+          </div>
+        ) : showMap ? (
+          <div style={{ height: '70vh', width: '100%', borderRadius: 'var(--radius-lg)', overflow: 'hidden', boxShadow: 'var(--shadow-md)' }}>
             <RoomsMap rooms={filteredRooms} />
           </div>
-
-          <h3 style={{ marginBottom: '1rem', color: 'var(--text-secondary)' }}>
-            Resultados ({filteredRooms.length})
-          </h3>
-          
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', paddingBottom: '5rem' }}>
             {filteredRooms.map(room => (
-              <div key={room.id} className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-                {room.images && room.images.length > 0 ? (
-                  <img src={room.images[0]} alt={room.title} style={{ width: '100%', height: '180px', objectFit: 'cover' }} />
-                ) : (
-                  <div style={{ width: '100%', height: '180px', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    Sin imagen
-                  </div>
-                )}
-                <div style={{ padding: '1rem', display: 'flex', flexDirection: 'column', flex: 1 }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                    <h4 style={{ fontSize: '1.1rem', marginBottom: '0.25rem', paddingRight: '0.5rem' }}>{room.title}</h4>
-                    {room.verified && (
-                      <span title="Habitación Verificada" style={{ color: '#0284c7', fontSize: '1.2rem' }}>✓</span>
+              <Link to={`/room/${room.id}`} key={room.id} style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="room-card">
+                  <div className="room-card-img-wrapper">
+                    {room.images && room.images.length > 0 ? (
+                      <img src={room.images[0]} alt={room.title} className="room-card-img" />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        Sin foto
+                      </div>
                     )}
-                  </div>
-                  <p style={{ color: 'var(--primary)', fontWeight: 'bold', fontSize: '1.1rem', marginBottom: '0.5rem' }}>
-                    ${room.price.toLocaleString('es-CO')}
-                  </p>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', flex: 1 }}>
-                    {room.description.length > 80 ? room.description.substring(0, 80) + '...' : room.description}
-                  </p>
-                  <div style={{ marginTop: '1rem', display: 'flex', flexWrap: 'wrap', gap: '0.25rem', marginBottom: '1rem' }}>
-                    {room.services && room.services.map(s => (
-                      <span key={s} style={{ background: 'var(--background)', padding: '0.2rem 0.5rem', borderRadius: 'var(--radius-sm)', fontSize: '0.75rem' }}>
-                        {s}
+                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                      <span style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                        <Star size={14} fill="currentColor" /> {room.averageRating ? room.averageRating : '----'}
                       </span>
-                    ))}
+                    </div>
                   </div>
-                  <Link to={`/room/${room.id}`} className="btn btn-primary" style={{ textAlign: 'center', width: '100%', padding: '0.5rem', fontSize: '0.9rem' }}>
-                    Ver Detalles
-                  </Link>
+                  <div style={{ padding: '0.75rem 1rem 1rem' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <h4 className="text-truncate" style={{ fontSize: '1.05rem', margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>{room.title}</h4>
+                      {room.verified && <CheckCircle2 size={16} color="#0284c7" />}
+                    </div>
+                    <p className="text-truncate" style={{ color: 'var(--text-secondary)', margin: '0 0 0.25rem 0', fontSize: '0.95rem' }}>Anfitrión: {room.ownerName}</p>
+                    <p style={{ margin: 0, fontSize: '1.05rem' }}>
+                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>${room.price.toLocaleString('es-CO')}</span> <span style={{ color: 'var(--text-secondary)' }}>mes</span>
+                    </p>
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
-        </div>
-
+        )}
       </div>
     </div>
   );
