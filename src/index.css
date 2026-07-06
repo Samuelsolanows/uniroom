@@ -103,7 +103,7 @@ header nav a:hover {
 /* Property Cards (Airbnb Style Grid) */
 .room-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 2rem 1.5rem;
 }
 
@@ -428,4 +428,52 @@ header nav a:active, header nav button:active {
   .search-pill-btn {
     width: 100%;
   }
+
+  /* Mobile Gallery Carousel */
+  .mobile-carousel {
+    display: flex !important;
+    overflow-x: auto !important;
+    scroll-snap-type: x mandatory;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    gap: 0 !important;
+    grid-template-columns: none !important;
+  }
+  .mobile-carousel::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-carousel > * {
+    flex: 0 0 100%;
+    scroll-snap-align: center;
+  }
+
+  /* Mobile Bottom Bar for Reservation */
+  .mobile-bottom-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 900;
+    box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+  }
+  
+  .hide-on-mobile {
+    display: none !important;
+  }
+  
+  .show-on-mobile {
+    display: flex !important;
+  }
+}
+
+/* Base utility for Mobile Only Elements */
+.show-on-mobile {
+  display: none;
 }

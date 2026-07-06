@@ -275,22 +275,29 @@ export default function RoomDetails() {
 
   if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Cargando detalles...</div>;
   if (!room) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Habitación no encontrada.</div>;
-
   return (
     <div className="container" style={{ padding: '2rem 1rem' }}>
       <h1 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{room.title}</h1>
       
       {/* Galería de Fotos Airbnb Style */}
       {room.images && room.images.length > 0 ? (
-        <div className="grid-mobile-1" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', height: '400px', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '2.5rem', position: 'relative' }}>
-          <img onClick={() => openGallery(0)} src={room.images[0]} alt="Foto principal" style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '0.5rem' }}>
+        <div className="grid-mobile-1 mobile-carousel" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', height: '400px', borderRadius: 'var(--radius-lg)', overflow: 'hidden', marginBottom: '2.5rem', position: 'relative' }}>
+          <div style={{ minWidth: '100%', height: '100%' }}>
+            <img onClick={() => openGallery(0)} src={room.images[0]} alt="Foto principal" style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
+          </div>
+          <div className="hide-on-mobile" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', gap: '0.5rem' }}>
             {/* Si no hay 5 fotos, rellenamos repitiendo para mantener la cuadricula estética */}
             <img onClick={() => openGallery(1 % room.images.length)} src={room.images[1] || room.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
             <img onClick={() => openGallery(2 % room.images.length)} src={room.images[2] || room.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
             <img onClick={() => openGallery(3 % room.images.length)} src={room.images[3] || room.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
             <img onClick={() => openGallery(4 % room.images.length)} src={room.images[4] || room.images[0]} style={{ width: '100%', height: '100%', objectFit: 'cover', cursor: 'pointer', transition: 'transform 0.3s' }} className="gallery-img" />
           </div>
+          {/* Extra slides for mobile carousel */}
+          {room.images.slice(1).map((img, idx) => (
+            <div key={idx} className="show-on-mobile" style={{ minWidth: '100%', height: '100%' }}>
+              <img onClick={() => openGallery(idx + 1)} src={img} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            </div>
+          ))}
           <button 
             onClick={() => openGallery(0)}
             className="btn"
@@ -351,7 +358,7 @@ export default function RoomDetails() {
         </div>
 
         {/* Columna Derecha (Caja de Reserva Sticky) */}
-        <div style={{ flex: '1 1 300px', position: 'sticky', top: '100px' }}>
+        <div className="hide-on-mobile" style={{ flex: '1 1 300px', position: 'sticky', top: '100px' }}>
           <div className="reservation-box">
             <h2 style={{ marginBottom: '1.5rem' }}>
               <span style={{ fontSize: '1.5rem', fontWeight: 'bold' }}>${room.price.toLocaleString('es-CO')}</span>
@@ -494,6 +501,23 @@ export default function RoomDetails() {
           </div>
         </div>
       )}
+
+      {/* Mobile Sticky Bottom Bar */}
+      <div className="mobile-bottom-bar show-on-mobile">
+        <div>
+          <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>${room.price.toLocaleString('es-CO')}</div>
+          <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>/ mes</div>
+        </div>
+        <button 
+          className="btn btn-primary" 
+          onClick={handleReserve}
+          disabled={actionLoading}
+          style={{ padding: '0.75rem 2rem', borderRadius: 'var(--radius-md)', fontSize: '1rem' }}
+        >
+          {actionLoading ? '...' : 'Reservar'}
+        </button>
+      </div>
+
     </div>
   );
 }

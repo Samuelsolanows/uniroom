@@ -3,6 +3,7 @@ import { Suspense, lazy, useState } from 'react';
 import './App.css';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
+import { SpeedInsights } from "@vercel/speed-insights/react";
 
 const Login = lazy(() => import('./components/Login'));
 const Register = lazy(() => import('./components/Register'));
@@ -145,6 +146,7 @@ function App() {
               <Route path="/admin" element={<AdminPanel />} />
             </Routes>
           </Suspense>
+          <SpeedInsights />
         </div>
       </main>
 
