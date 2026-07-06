@@ -112,7 +112,7 @@ export default function AuthModal({ isOpen, onClose, initialView = 'login' }) {
             {view === 'login' ? 'Bienvenido de nuevo' : 'Crea tu cuenta'}
           </h2>
           <p style={{ margin: '0.5rem 0 0', color: 'var(--text-secondary)', fontSize: '0.9rem' }}>
-            {view === 'login' ? 'Ingresa para gestionar tus habitaciones' : 'Únete a Quick Salk y encuentra tu espacio ideal'}
+            {view === 'login' ? 'Ingresa para gestionar tus habitaciones' : 'Únete a UniRoom y encuentra tu espacio ideal'}
           </p>
         </div>
 
