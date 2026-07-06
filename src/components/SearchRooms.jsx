@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import RoomsMap from './RoomsMap';
+import SkeletonLoader from './SkeletonLoader';
 import { Star, CheckCircle2 } from 'lucide-react';
 
 export default function SearchRooms() {
@@ -81,7 +82,12 @@ export default function SearchRooms() {
     setFilteredRooms(result);
   }, [allRooms, maxPrice, searchTerm, selectedService]);
 
-  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Buscando alojamientos...</div>;
+  if (loading) return (
+    <div className="container" style={{ padding: '2rem 1rem' }}>
+      <div style={{ padding: '3rem 0' }}></div>
+      <SkeletonLoader count={8} />
+    </div>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', padding: '2rem 0' }}>
@@ -157,13 +163,19 @@ export default function SearchRooms() {
             <RoomsMap rooms={filteredRooms} />
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '1.5rem', paddingBottom: '5rem' }}>
-            {filteredRooms.map(room => (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingBottom: '5rem' }}>
+            {filteredRooms.map((room, index) => (
               <Link to={`/room/${room.id}`} key={room.id} style={{ textDecoration: 'none', color: 'inherit' }}>
                 <div className="room-card">
                   <div className="room-card-img-wrapper">
                     {room.images && room.images.length > 0 ? (
-                      <img src={room.images[0]} alt={room.title} className="room-card-img" />
+                      <img 
+                        src={room.images[0]} 
+                        alt={room.title} 
+                        className="room-card-img" 
+                        loading={index < 4 ? "eager" : "lazy"} 
+                        fetchPriority={index < 4 ? "high" : "auto"} 
+                      />
                     ) : (
                       <div style={{ width: '100%', height: '100%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         Sin foto
