@@ -4,6 +4,7 @@ import './App.css';
 import { Toaster } from 'react-hot-toast';
 import { useAuth } from './hooks/useAuth';
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Analytics } from "@vercel/analytics/react";
 
 const Login = lazy(() => import('./components/Login'));
 const Register = lazy(() => import('./components/Register'));
@@ -34,6 +35,8 @@ function App() {
   return (
     <div className="app-container" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
       <Toaster position="top-right" containerStyle={{ zIndex: 999999 }} />
+      <SpeedInsights />
+      <Analytics />
       <Suspense fallback={null}>
         <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} initialView={authModalInitialView} />
       </Suspense>
@@ -147,6 +150,7 @@ function App() {
             </Routes>
           </Suspense>
           <SpeedInsights />
+          <Analytics />
         </div>
       </main>
 
