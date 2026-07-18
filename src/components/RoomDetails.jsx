@@ -108,7 +108,10 @@ export default function RoomDetails() {
   }, [id]);
 
   const handleReserve = async () => {
-    if (!auth.currentUser) return navigate('/login');
+    if (!auth.currentUser) {
+      window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: { view: 'register' } }));
+      return;
+    }
       if (room.ownerId === auth.currentUser.uid) {
         toast.error("No puedes reservar tu propia habitación.");
         return;
@@ -134,7 +137,10 @@ export default function RoomDetails() {
   };
 
   const handleContact = async () => {
-    if (!auth.currentUser) return navigate('/login');
+    if (!auth.currentUser) {
+      window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: { view: 'register' } }));
+      return;
+    }
     if (auth.currentUser && auth.currentUser.uid === room.ownerId) {
       toast.error("Esta es tu publicación.");
       return;
