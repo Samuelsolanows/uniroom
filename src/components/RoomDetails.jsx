@@ -3,9 +3,10 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { doc, getDoc, addDoc, collection, serverTimestamp, query, where, getDocs, deleteDoc } from 'firebase/firestore';
 import { useAuth } from '../hooks/useAuth';
+import { useFavorites } from '../hooks/useFavorites';
 import CryptoJS from 'crypto-js';
 import { MapContainer, TileLayer, Marker } from 'react-leaflet';
-import { Star, Check, MapPin, Trash2 } from 'lucide-react';
+import { Star, Check, MapPin, Trash2, Heart, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const StarRating = ({ rating, setRating }) => {
@@ -37,6 +38,7 @@ export default function RoomDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { currentUser, userData, isAdmin } = useAuth();
+  const { favorites, toggleFavorite } = useFavorites();
   const [room, setRoom] = useState(null);
   const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
@@ -283,7 +285,15 @@ export default function RoomDetails() {
   if (!room) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Habitación no encontrada.</div>;
   return (
     <div className="container" style={{ padding: '2rem 1rem' }}>
-      <h1 style={{ fontSize: '2rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>{room.title}</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', margin: 0 }}>{room.title}</h1>
+        <button 
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(room.id); }}
+          style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.75rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+        >
+          <Heart size={24} fill={favorites.includes(room.id) ? "var(--error-text)" : "none"} color={favorites.includes(room.id) ? "var(--error-text)" : "var(--text-secondary)"} />
+        </button>
+      </div>
       
       {/* Galería de Fotos Airbnb Style */}
       {room.images && room.images.length > 0 ? (
@@ -508,20 +518,29 @@ export default function RoomDetails() {
         </div>
       )}
 
-      {/* Mobile Sticky Bottom Bar */}
       <div className="mobile-bottom-bar show-on-mobile">
         <div>
           <div style={{ fontSize: '1.2rem', fontWeight: 'bold' }}>${room.price.toLocaleString('es-CO')}</div>
           <div style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>/ mes</div>
         </div>
-        <button 
-          className="btn btn-primary" 
-          onClick={handleReserve}
-          disabled={actionLoading}
-          style={{ padding: '0.75rem 2rem', borderRadius: 'var(--radius-md)', fontSize: '1rem' }}
-        >
-          {actionLoading ? '...' : 'Reservar'}
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <button
+            className="btn"
+            onClick={handleContact}
+            disabled={actionLoading}
+            style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}
+          >
+            <MessageSquare size={20} />
+          </button>
+          <button 
+            className="btn btn-primary" 
+            onClick={handleReserve}
+            disabled={actionLoading}
+            style={{ padding: '0.75rem 1.5rem', borderRadius: 'var(--radius-md)', fontSize: '1rem' }}
+          >
+            {actionLoading ? '...' : 'Reservar'}
+          </button>
+        </div>
       </div>
 
     </div>

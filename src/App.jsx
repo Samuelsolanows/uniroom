@@ -18,6 +18,7 @@ const Reservations = lazy(() => import('./components/Reservations'));
 const ChatsList = lazy(() => import('./components/ChatsList'));
 const AdminPanel = lazy(() => import('./components/AdminPanel'));
 const AuthModal = lazy(() => import('./components/AuthModal'));
+const Favorites = lazy(() => import('./components/Favorites'));
 import { Menu, X } from 'lucide-react';
 
 function App() {
@@ -80,6 +81,7 @@ function App() {
                   <Link to="/my-rooms" style={{ fontWeight: '600' }}>Mis Anuncios</Link>
                 )}
                 <Link to="/reservations" style={{ fontWeight: '600' }}>Reservas</Link>
+                <Link to="/favorites" style={{ fontWeight: '600' }}>Favoritos</Link>
                 <Link to="/chats" style={{ fontWeight: '600' }}>Mensajes</Link>
                 <Link to="/profile" style={{ fontWeight: '600' }}>Perfil</Link>
                 {isAdmin && (
@@ -125,6 +127,7 @@ function App() {
                 <Link to="/my-rooms" style={{ fontWeight: '600', fontSize: '1.1rem' }}>Mis Anuncios</Link>
               )}
               <Link to="/reservations" style={{ fontWeight: '600', fontSize: '1.1rem' }}>Reservas</Link>
+              <Link to="/favorites" style={{ fontWeight: '600', fontSize: '1.1rem' }}>Favoritos</Link>
               <Link to="/chats" style={{ fontWeight: '600', fontSize: '1.1rem' }}>Mensajes</Link>
               <Link to="/profile" style={{ fontWeight: '600', fontSize: '1.1rem' }}>Perfil</Link>
               {isAdmin && (
@@ -155,6 +158,7 @@ function App() {
               <Route path="/chat/:chatId" element={<Chat />} />
               <Route path="/chats" element={<ChatsList />} />
               <Route path="/reservations" element={<Reservations />} />
+              <Route path="/favorites" element={<Favorites />} />
               <Route path="/admin" element={<AdminPanel />} />
             </Routes>
           </Suspense>

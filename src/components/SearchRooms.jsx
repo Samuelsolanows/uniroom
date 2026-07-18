@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useFavorites } from '../hooks/useFavorites';
 import RoomsMap from './RoomsMap';
 import SkeletonLoader from './SkeletonLoader';
-import { Star, CheckCircle2 } from 'lucide-react';
+import { Star, CheckCircle2, Heart } from 'lucide-react';
 
 export default function SearchRooms() {
+  const { favorites, toggleFavorite } = useFavorites();
   const [allRooms, setAllRooms] = useState([]);
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -165,40 +167,48 @@ export default function SearchRooms() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem', paddingBottom: '5rem' }}>
             {filteredRooms.map((room, index) => (
-              <Link to={`/room/${room.id}`} key={room.id} style={{ textDecoration: 'none', color: 'inherit' }}>
-                <div className="room-card">
-                  <div className="room-card-img-wrapper">
-                    {room.images && room.images.length > 0 ? (
-                      <img 
-                        src={room.images[0]} 
-                        alt={room.title} 
-                        className="room-card-img" 
-                        loading={index < 4 ? "eager" : "lazy"} 
-                        fetchPriority={index < 4 ? "high" : "auto"} 
-                      />
-                    ) : (
-                      <div style={{ width: '100%', height: '100%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        Sin foto
+              <div key={room.id} style={{ position: 'relative' }}>
+                <Link to={`/room/${room.id}`} style={{ textDecoration: 'none', color: 'inherit' }}>
+                  <div className="room-card">
+                    <div className="room-card-img-wrapper">
+                      {room.images && room.images.length > 0 ? (
+                        <img 
+                          src={room.images[0]} 
+                          alt={room.title} 
+                          className="room-card-img" 
+                          loading={index < 4 ? "eager" : "lazy"} 
+                          fetchPriority={index < 4 ? "high" : "auto"} 
+                        />
+                      ) : (
+                        <div style={{ width: '100%', height: '100%', background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          Sin foto
+                        </div>
+                      )}
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontSize: '0.8rem', fontWeight: 'bold' }}>
+                        <span style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                          <Star size={14} fill="currentColor" /> {room.averageRating ? room.averageRating : '----'}
+                        </span>
                       </div>
-                    )}
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', padding: '0.2rem 0.6rem', borderRadius: 'var(--radius-full)', fontSize: '0.8rem', fontWeight: 'bold' }}>
-                      <span style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                        <Star size={14} fill="currentColor" /> {room.averageRating ? room.averageRating : '----'}
-                      </span>
+                    </div>
+                    <div style={{ padding: '0.75rem 1rem 1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <h4 className="text-truncate" style={{ fontSize: '1.05rem', margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>{room.title}</h4>
+                        {room.verified && <CheckCircle2 size={16} color="#0284c7" />}
+                      </div>
+                      <p className="text-truncate" style={{ color: 'var(--text-secondary)', margin: '0 0 0.25rem 0', fontSize: '0.95rem' }}>Anfitrión: {room.ownerName}</p>
+                      <p style={{ margin: 0, fontSize: '1.05rem' }}>
+                        <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>${room.price.toLocaleString('es-CO')}</span> <span style={{ color: 'var(--text-secondary)' }}>mes</span>
+                      </p>
                     </div>
                   </div>
-                  <div style={{ padding: '0.75rem 1rem 1rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <h4 className="text-truncate" style={{ fontSize: '1.05rem', margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>{room.title}</h4>
-                      {room.verified && <CheckCircle2 size={16} color="#0284c7" />}
-                    </div>
-                    <p className="text-truncate" style={{ color: 'var(--text-secondary)', margin: '0 0 0.25rem 0', fontSize: '0.95rem' }}>Anfitrión: {room.ownerName}</p>
-                    <p style={{ margin: 0, fontSize: '1.05rem' }}>
-                      <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>${room.price.toLocaleString('es-CO')}</span> <span style={{ color: 'var(--text-secondary)' }}>mes</span>
-                    </p>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+                <button 
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(room.id); }}
+                  style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', zIndex: 2 }}
+                >
+                  <Heart size={20} fill={favorites.includes(room.id) ? "var(--error-text)" : "none"} color={favorites.includes(room.id) ? "var(--error-text)" : "var(--text-secondary)"} />
+                </button>
+              </div>
             ))}
           </div>
         )}
