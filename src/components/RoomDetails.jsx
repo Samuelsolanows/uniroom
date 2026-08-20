@@ -289,6 +289,7 @@ export default function RoomDetails() {
         <h1 style={{ fontSize: '2rem', color: 'var(--text-primary)', margin: 0 }}>{room.title}</h1>
         <button 
           onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(room.id); }}
+          aria-label={favorites.includes(room.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
           style={{ background: 'var(--surface)', border: '1px solid var(--border)', padding: '0.75rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
         >
           <Heart size={24} fill={favorites.includes(room.id) ? "var(--error-text)" : "none"} color={favorites.includes(room.id) ? "var(--error-text)" : "var(--text-secondary)"} />
@@ -472,15 +473,12 @@ export default function RoomDetails() {
       {/* Full-Screen Gallery Modal */}
       {galleryOpen && room.images && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 10000, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <button 
-            onClick={closeGallery} 
-            style={{ position: 'absolute', top: '20px', right: '20px', background: 'transparent', color: 'white', border: 'none', fontSize: '2rem', cursor: 'pointer', padding: '1rem' }}
-          >
-            ✕
+          <button aria-label="Cerrar galería" onClick={closeGallery} style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(0,0,0,0.5)', color: 'white', border: 'none', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={24} />
           </button>
           
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', maxWidth: '1000px', padding: '0 2rem' }}>
-            <button onClick={prevImage} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: '50px', height: '50px', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button aria-label="Anterior foto" onClick={prevImage} style={{ background: 'rgba(255,255,255,0.2)', color: 'white', border: 'none', borderRadius: '50%', width: '50px', height: '50px', fontSize: '1.5rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               &larr;
             </button>
             
@@ -526,6 +524,7 @@ export default function RoomDetails() {
         <div style={{ display: 'flex', gap: '0.5rem' }}>
           <button
             className="btn"
+            aria-label="Contactar al anfitrión"
             onClick={handleContact}
             disabled={actionLoading}
             style={{ padding: '0.75rem', borderRadius: 'var(--radius-md)', background: 'var(--surface)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center' }}

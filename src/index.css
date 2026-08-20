@@ -12,8 +12,8 @@
   --surface: #ffffff;
   
   --text-primary: #222222;  /* Almost black for high contrast */
-  --text-secondary: #717171;/* Gray for subtitles */
-  --text-muted: #a3a3a3;
+  --text-secondary: #4B5563;/* Dark gray for better contrast WCAG AA */
+  --text-muted: #6B7280;
   
   --border: #DADADA;        /* University Light Gray */
   --border-light: #ebebeb;
@@ -45,6 +45,21 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* Evitar zoom en Safari iOS en formularios */
+input, textarea, select {
+  font-size: 16px !important;
+}
+
+input::placeholder, textarea::placeholder {
+  color: #4B5563;
+  opacity: 1;
+}
+
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
 }
 
 body {

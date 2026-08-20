@@ -119,7 +119,20 @@ export default function PublishRoom() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (currentStep < 3) {
+      if (currentStep === 1 && (!title.trim() || !description.trim() || Number(price) <= 0)) {
+        toast.error('Revisa que el título y la descripción no estén vacíos, y el precio sea válido.');
+        return;
+      }
+      if (currentStep === 2 && !address.trim()) {
+        toast.error('Revisa la dirección.');
+        return;
+      }
       setCurrentStep(prev => prev + 1);
+      return;
+    }
+
+    if (!isEditMode && images.length === 0) {
+      toast.error('Debes subir al menos una fotografía.');
       return;
     }
     if (!auth.currentUser) return;
@@ -206,7 +219,7 @@ export default function PublishRoom() {
 
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Precio Mensual (COP)</label>
-                <input type="number" className="input" placeholder="Ej: 450000" value={price} onChange={e => setPrice(e.target.value)} required min="0" />
+                <input type="number" className="input" placeholder="Ej: 450000" value={price} onChange={e => setPrice(e.target.value)} required min="0" step="1" />
               </div>
             </div>
           )}
@@ -248,7 +261,7 @@ export default function PublishRoom() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s' }}>
               <div>
                 <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Fotografías</label>
-                <input type="file" multiple accept="image/*" onChange={handleImageChange} className="input" style={{ padding: '0.5rem' }} />
+                <input type="file" multiple accept="image/jpeg, image/png, image/webp" onChange={handleImageChange} className="input" style={{ padding: '0.5rem' }} />
                 <small style={{ color: 'var(--text-muted)' }}>
                   {isEditMode ? 'Si subes nuevas imágenes, reemplazarán a las anteriores.' : 'Puedes seleccionar varias imágenes.'}
                 </small>

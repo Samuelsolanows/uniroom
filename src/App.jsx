@@ -96,7 +96,7 @@ function App() {
             )}
           </nav>
           
-          <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)}>
+          <button className="mobile-menu-btn" onClick={() => setIsMobileMenuOpen(true)} aria-label="Abrir menú">
             <Menu size={28} />
           </button>
         </div>

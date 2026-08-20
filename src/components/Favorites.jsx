@@ -108,6 +108,7 @@ export default function Favorites() {
               </Link>
               <button 
                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(room.id); }}
+                aria-label="Quitar de favoritos"
                 style={{ position: 'absolute', top: '10px', right: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', zIndex: 2 }}
               >
                 <Heart size={20} fill="var(--error-text)" color="var(--error-text)" />

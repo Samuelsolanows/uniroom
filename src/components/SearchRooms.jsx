@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { db } from '../firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useFavorites } from '../hooks/useFavorites';
@@ -13,11 +13,22 @@ export default function SearchRooms() {
   const [filteredRooms, setFilteredRooms] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Filters state
-  const [searchTerm, setSearchTerm] = useState('');
-  const [maxPrice, setMaxPrice] = useState('');
-  const [selectedService, setSelectedService] = useState('');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Filters state initialized from URL
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || '');
+  const [maxPrice, setMaxPrice] = useState(searchParams.get('price') || '');
+  const [selectedService, setSelectedService] = useState(searchParams.get('service') || '');
   const [showMap, setShowMap] = useState(false);
+
+  // Sync state to URL
+  useEffect(() => {
+    const params = {};
+    if (searchTerm) params.q = searchTerm;
+    if (maxPrice) params.price = maxPrice;
+    if (selectedService) params.service = selectedService;
+    setSearchParams(params, { replace: true });
+  }, [searchTerm, maxPrice, selectedService, setSearchParams]);
 
   useEffect(() => {
     const fetchAvailableRooms = async () => {
@@ -145,6 +156,7 @@ export default function SearchRooms() {
         <div style={{ position: 'fixed', bottom: '30px', left: '50%', transform: 'translateX(-50%)', zIndex: 1000 }}>
           <button 
             className="btn" 
+            aria-label={showMap ? "Ocultar mapa" : "Mostrar mapa"}
             style={{ background: 'var(--text-primary)', color: 'white', borderRadius: 'var(--radius-full)', padding: '0.75rem 1.5rem', boxShadow: 'var(--shadow-lg)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
             onClick={() => setShowMap(!showMap)}
           >
@@ -204,6 +216,7 @@ export default function SearchRooms() {
                 </Link>
                 <button 
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleFavorite(room.id); }}
+                  aria-label={favorites.includes(room.id) ? "Quitar de favoritos" : "Añadir a favoritos"}
                   style={{ position: 'absolute', top: '10px', left: '10px', background: 'rgba(255,255,255,0.9)', border: 'none', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)', zIndex: 2 }}
                 >
                   <Heart size={20} fill={favorites.includes(room.id) ? "var(--error-text)" : "none"} color={favorites.includes(room.id) ? "var(--error-text)" : "var(--text-secondary)"} />
