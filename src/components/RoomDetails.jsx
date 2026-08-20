@@ -43,6 +43,8 @@ export default function RoomDetails() {
   const [ownerName, setOwnerName] = useState('');
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [contactMessage, setContactMessage] = useState('');
   const [reviews, setReviews] = useState([]);
   const [newReview, setNewReview] = useState({ rating: 5, comment: '' });
   const [galleryOpen, setGalleryOpen] = useState(false);
@@ -138,17 +140,19 @@ export default function RoomDetails() {
     }
   };
 
-  const handleContact = async () => {
+  const handleContact = () => {
     if (!auth.currentUser) {
       window.dispatchEvent(new CustomEvent('open-auth-modal', { detail: { view: 'register' } }));
       return;
     }
-    if (auth.currentUser && auth.currentUser.uid === room.ownerId) {
-      toast.error("Esta es tu publicación.");
-      return;
-    }
+    setContactMessage(`Hola ${ownerName}, estoy interesado en tu habitación: "${room.title}". ¿Sigue disponible?`);
+    setShowContactModal(true);
+  };
+
+  const confirmContact = async (e) => {
+    e.preventDefault();
+    if (!contactMessage.trim()) return;
     
-    // Create or navigate to chat
     setActionLoading(true);
     try {
       const newChat = await addDoc(collection(db, 'chats'), {
@@ -156,13 +160,23 @@ export default function RoomDetails() {
         roomTitle: room.title,
         studentId: auth.currentUser.uid,
         ownerId: room.ownerId,
+        lastMessage: contactMessage,
         updatedAt: serverTimestamp()
       });
+      
+      await addDoc(collection(db, 'chats', newChat.id, 'messages'), {
+        text: contactMessage,
+        senderId: auth.currentUser.uid,
+        createdAt: serverTimestamp()
+      });
+      
       navigate(`/chat/${newChat.id}`);
     } catch (error) {
       console.error("Error al iniciar chat:", error);
+      toast.error("Error al enviar mensaje");
     } finally {
       setActionLoading(false);
+      setShowContactModal(false);
     }
   };
 
@@ -357,6 +371,15 @@ export default function RoomDetails() {
             </div>
           </div>
 
+          {room.rules && room.rules.trim() !== '' && (
+            <div style={{ padding: '2rem 0', borderBottom: '1px solid var(--border)' }}>
+              <h3 style={{ marginBottom: '1.5rem', fontSize: '1.3rem' }}>Reglas y Condiciones</h3>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '1.05rem', whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                {room.rules}
+              </p>
+            </div>
+          )}
+
           <div style={{ padding: '2rem 0', borderBottom: '1px solid var(--border)' }}>
             <h3 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: 'var(--text-primary)' }}>Ubicación</h3>
             {room.address && <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
@@ -501,17 +524,37 @@ export default function RoomDetails() {
 
       {/* Confirm Modal */}
       {showConfirm.visible && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div className="card" style={{ backgroundColor: 'var(--background, #f7f7f9)', padding: '2rem', maxWidth: '400px', textAlign: 'center', margin: '1rem', borderRadius: '12px' }}>
-            <h3 style={{ marginBottom: '1rem', color: 'var(--text-primary)' }}>Confirmar acción</h3>
-            <p style={{ marginBottom: '2rem', color: 'var(--text-secondary)' }}>{showConfirm.message}</p>
-            <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-              <button className="btn" style={{ backgroundColor: '#f1f5f9', color: 'var(--text-primary)' }} onClick={() => setShowConfirm({ visible: false, action: null, message: '' })}>Cancelar</button>
-              <button className="btn" style={{ background: 'var(--primary)', color: 'white' }} onClick={() => {
-                showConfirm.action();
-                setShowConfirm({ visible: false, action: null, message: '' });
-              }}>Sí, continuar</button>
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ padding: '2rem', maxWidth: '400px', width: '90%', textAlign: 'center' }}>
+            <h3 style={{ margin: '0 0 1rem 0' }}>¿Estás seguro?</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem' }}>{showConfirm.message}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
+              <button className="btn" style={{ background: 'var(--border)' }} onClick={() => setShowConfirm({ visible: false, message: '', action: null })}>Cancelar</button>
+              <button className="btn" style={{ background: 'var(--error-bg)', color: 'var(--error-text)' }} onClick={() => { showConfirm.action(); setShowConfirm({ visible: false, message: '', action: null }); }}>Confirmar</button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Contact Modal */}
+      {showContactModal && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div className="card" style={{ width: '90%', maxWidth: '500px', padding: '2rem' }}>
+            <h3 style={{ marginTop: 0 }}>Contactar al Anfitrión</h3>
+            <p style={{ color: 'var(--text-secondary)' }}>Escribe tu primer mensaje para iniciar la conversación.</p>
+            <form onSubmit={confirmContact}>
+              <textarea 
+                className="input" 
+                rows="5" 
+                value={contactMessage}
+                onChange={(e) => setContactMessage(e.target.value)}
+                style={{ width: '100%', marginBottom: '1.5rem', resize: 'vertical' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '1rem' }}>
+                <button type="button" className="btn" onClick={() => setShowContactModal(false)} style={{ background: 'var(--border)' }}>Cancelar</button>
+                <button type="submit" className="btn btn-primary" disabled={actionLoading}>{actionLoading ? 'Enviando...' : 'Enviar Mensaje'}</button>
+              </div>
+            </form>
           </div>
         </div>
       )}

@@ -27,6 +27,7 @@ export default function PublishRoom() {
   const isEditMode = !!id;
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [rules, setRules] = useState('');
   const [address, setAddress] = useState('');
   const [price, setPrice] = useState('');
   const [services, setServices] = useState({
@@ -61,6 +62,7 @@ export default function PublishRoom() {
             // Verify ownership or admin (Ideally checked here, but we let rules handle or simple check)
             setTitle(data.title || '');
             setDescription(data.description || '');
+            setRules(data.rules || '');
             setAddress(data.address || '');
             setPrice(data.price || '');
             const activeServices = data.services || [];
@@ -118,7 +120,7 @@ export default function PublishRoom() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (currentStep < 3) {
+    if (currentStep < 4) {
       if (currentStep === 1 && (!title.trim() || !description.trim() || Number(price) <= 0)) {
         toast.error('Revisa que el título y la descripción no estén vacíos, y el precio sea válido.');
         return;
@@ -153,6 +155,7 @@ export default function PublishRoom() {
       const roomData = {
         title,
         description,
+        rules,
         address,
         price: Number(price),
         services: activeServices,
@@ -196,13 +199,14 @@ export default function PublishRoom() {
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
           
           {/* Step Indicator */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', fontSize: '0.9rem' }}>
             <div style={{ flex: 1, textAlign: 'center', fontWeight: currentStep >= 1 ? 'bold' : 'normal', color: currentStep >= 1 ? 'var(--primary)' : 'var(--text-muted)' }}>1. Básicos</div>
             <div style={{ flex: 1, textAlign: 'center', fontWeight: currentStep >= 2 ? 'bold' : 'normal', color: currentStep >= 2 ? 'var(--primary)' : 'var(--text-muted)' }}>2. Detalles</div>
             <div style={{ flex: 1, textAlign: 'center', fontWeight: currentStep >= 3 ? 'bold' : 'normal', color: currentStep >= 3 ? 'var(--primary)' : 'var(--text-muted)' }}>3. Fotos</div>
+            <div style={{ flex: 1, textAlign: 'center', fontWeight: currentStep >= 4 ? 'bold' : 'normal', color: currentStep >= 4 ? 'var(--primary)' : 'var(--text-muted)' }}>4. Reglas</div>
           </div>
           <div style={{ height: '4px', background: 'var(--border)', borderRadius: '2px', marginBottom: '1rem', position: 'relative' }}>
-            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'var(--primary)', borderRadius: '2px', transition: 'width 0.3s', width: `${((currentStep - 1) / 2) * 100}%` }}></div>
+            <div style={{ position: 'absolute', top: 0, left: 0, height: '100%', background: 'var(--primary)', borderRadius: '2px', transition: 'width 0.3s', width: `${((currentStep - 1) / 3) * 100}%` }}></div>
           </div>
 
           {currentStep === 1 && (
@@ -274,6 +278,21 @@ export default function PublishRoom() {
             </div>
           )}
 
+          {currentStep === 4 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', animation: 'fadeIn 0.3s' }}>
+              <div>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Reglas y Condiciones (Opcional)</label>
+                <textarea 
+                  className="input" 
+                  rows="5" 
+                  placeholder="Ej: No se aceptan mascotas, visitas hasta las 10 PM, etc." 
+                  value={rules} 
+                  onChange={e => setRules(e.target.value)}
+                ></textarea>
+              </div>
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1rem' }}>
             {currentStep > 1 ? (
               <button type="button" className="btn" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }} onClick={() => setCurrentStep(prev => prev - 1)}>
@@ -283,7 +302,7 @@ export default function PublishRoom() {
               <div></div>
             )}
             
-            {currentStep < 3 ? (
+            {currentStep < 4 ? (
               <button type="submit" className="btn btn-primary">
                 Siguiente
               </button>

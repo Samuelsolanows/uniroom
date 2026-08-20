@@ -27,8 +27,7 @@ export default function MyRooms() {
     fetchRooms();
   }, []);
 
-  const toggleStatus = async (roomId, currentStatus) => {
-    const newStatus = currentStatus === 'disponible' ? 'no_disponible' : 'disponible';
+  const updateStatus = async (roomId, newStatus) => {
     try {
       const roomRef = doc(db, 'rooms', roomId);
       await updateDoc(roomRef, { status: newStatus });
@@ -148,11 +147,11 @@ export default function MyRooms() {
                 <span style={{ 
                   position: 'absolute', top: '1rem', left: '1rem',
                   fontSize: '0.75rem', fontWeight: 'bold', padding: '0.35rem 0.85rem', borderRadius: 'var(--radius-full)',
-                  background: room.status === 'disponible' ? 'var(--success-bg)' : 'var(--error-bg)',
-                  color: room.status === 'disponible' ? 'var(--success-text)' : 'var(--error-text)',
+                  background: room.status === 'disponible' ? 'var(--success-bg)' : room.status === 'pausada' ? 'var(--warning-bg)' : 'var(--error-bg)',
+                  color: room.status === 'disponible' ? 'var(--success-text)' : room.status === 'pausada' ? 'var(--warning-text)' : 'var(--error-text)',
                   boxShadow: '0 2px 4px rgba(0,0,0,0.1)'
                 }}>
-                  {room.status === 'disponible' ? 'DISPONIBLE' : 'OCUPADA'}
+                  {room.status === 'disponible' ? 'DISPONIBLE' : room.status === 'pausada' ? 'PAUSADA' : 'ALQUILADA'}
                 </span>
               </div>
               
@@ -179,13 +178,15 @@ export default function MyRooms() {
                     >
                       <Edit size={16}/> Editar
                     </button>
-                    <button 
-                      className="btn" 
-                      onClick={() => toggleStatus(room.id, room.status)}
-                      style={{ background: room.status === 'disponible' ? 'var(--error-bg)' : 'var(--success-bg)', color: room.status === 'disponible' ? 'var(--error-text)' : 'var(--success-text)', border: 'none', fontSize: '0.9rem', padding: '0.5rem 1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
+                    <select
+                      value={room.status}
+                      onChange={(e) => updateStatus(room.id, e.target.value)}
+                      style={{ padding: '0.5rem 1rem', fontSize: '0.9rem', fontWeight: 'bold', background: room.status === 'disponible' ? 'var(--success-bg)' : room.status === 'pausada' ? 'var(--warning-bg)' : 'var(--error-bg)', color: room.status === 'disponible' ? 'var(--success-text)' : room.status === 'pausada' ? 'var(--warning-text)' : 'var(--error-text)', border: 'none', borderRadius: 'var(--radius-full)', cursor: 'pointer', outline: 'none' }}
                     >
-                      {room.status === 'disponible' ? <><Ban size={16}/> Marcar Ocupada</> : <><CheckCircle2 size={16}/> Marcar Disponible</>}
-                    </button>
+                      <option value="disponible">🟢 Disponible</option>
+                      <option value="pausada">🟡 Pausada</option>
+                      <option value="alquilada">🔴 Alquilada</option>
+                    </select>
                   </div>
                 </div>
               </div>
