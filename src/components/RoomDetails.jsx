@@ -9,6 +9,27 @@ import { MapContainer, TileLayer, Marker } from 'react-leaflet';
 import { Star, Check, MapPin, Trash2, Heart, MessageSquare } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+// Coordenadas genéricas de las sedes
+const UNIPAMPLONA_SEDES = [
+  { nombre: 'Sede Principal', lat: 7.3768, lng: -72.6481 },
+  { nombre: 'Sede La Casona', lat: 7.3750, lng: -72.6450 },
+  { nombre: 'Sede El Rosario', lat: 7.3780, lng: -72.6460 }
+];
+
+// Función para calcular distancia en km (Fórmula de Haversine)
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+  const R = 6371; // Radio de la tierra en km
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2); 
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)); 
+  return (R * c).toFixed(1);
+};
+
 const StarRating = ({ rating, setRating }) => {
   const [hover, setHover] = useState(0);
   return (
@@ -41,6 +62,7 @@ export default function RoomDetails() {
   const { favorites, toggleFavorite } = useFavorites();
   const [room, setRoom] = useState(null);
   const [ownerName, setOwnerName] = useState('');
+  const [ownerVerified, setOwnerVerified] = useState(false);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [showContactModal, setShowContactModal] = useState(false);
@@ -77,9 +99,10 @@ export default function RoomDetails() {
           setRoom({ id: roomDoc.id, ...data });
           
           if (data.ownerId) {
-            const ownerDoc = await getDoc(doc(db, 'users', data.ownerId));
-            if (ownerDoc.exists()) {
-              setOwnerName(ownerDoc.data().name || 'Anfitrión Desconocido');
+            const userDoc = await getDoc(doc(db, 'users', data.ownerId));
+            if (userDoc.exists()) {
+              setOwnerName(userDoc.data().name || 'Usuario Anónimo');
+              setOwnerVerified(userDoc.data().isVerified || false);
             }
           }
         }
@@ -295,7 +318,23 @@ export default function RoomDetails() {
     }
   };
 
-  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Cargando detalles...</div>;
+  if (loading) return (
+    <div className="container" style={{ padding: '2rem 1rem' }}>
+      <div style={{ height: '40px', width: '60%', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '1.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+      <div style={{ height: '400px', width: '100%', background: 'var(--border)', borderRadius: 'var(--radius-lg)', marginBottom: '2.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+      <div style={{ display: 'flex', gap: '2rem' }}>
+        <div style={{ flex: '1 1 600px' }}>
+          <div style={{ height: '30px', width: '40%', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '1rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ height: '20px', width: '100%', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '0.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ height: '20px', width: '90%', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '0.5rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+          <div style={{ height: '20px', width: '95%', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+        </div>
+        <div className="hide-on-mobile" style={{ flex: '1 1 300px' }}>
+          <div style={{ height: '250px', width: '100%', background: 'var(--border)', borderRadius: 'var(--radius-lg)', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+        </div>
+      </div>
+    </div>
+  );
   if (!room) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Habitación no encontrada.</div>;
   return (
     <div className="container" style={{ padding: '2rem 1rem' }}>
@@ -348,7 +387,10 @@ export default function RoomDetails() {
         
         {/* Columna Izquierda (Detalles) */}
         <div style={{ flex: '1 1 600px' }}>
-          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem' }}>Anfitrión: {ownerName || room.ownerId.substring(0,6)}</h2>
+          <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            Anfitrión: {ownerName}
+            {ownerVerified && <CheckCircle2 size={20} color="#16a34a" />}
+          </h2>
           <p style={{ color: 'var(--text-secondary)', paddingBottom: '1.5rem', borderBottom: '1px solid var(--border)' }}>
             Ubicación Premium · Habitación para estudiantes
           </p>
@@ -385,6 +427,22 @@ export default function RoomDetails() {
             {room.address && <p style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem', color: 'var(--text-secondary)', fontSize: '1.05rem' }}>
               <MapPin size={20} color="var(--primary)" /> {room.address}
             </p>}
+            
+            {room.location && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+                {UNIPAMPLONA_SEDES.map(sede => {
+                  const dist = calculateDistance(room.location.lat, room.location.lng, sede.lat, sede.lng);
+                  const time = Math.round(dist * 12); // Aprox 12 min por km caminando
+                  return (
+                    <div key={sede.nombre} style={{ background: 'var(--surface)', padding: '1rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border)', textAlign: 'center' }}>
+                      <p style={{ fontWeight: 'bold', margin: '0 0 0.5rem 0', fontSize: '0.9rem' }}>{sede.nombre}</p>
+                      <p style={{ margin: 0, color: 'var(--text-secondary)', fontSize: '0.85rem' }}>A {dist} km (~{time} min a pie)</p>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+
             <div style={{ height: '350px', width: '100%', borderRadius: 'var(--radius-lg)', overflow: 'hidden', border: '1px solid var(--border)' }}>
               <MapContainer center={room.location ? [room.location.lat, room.location.lng] : [7.3768, -72.6481]} zoom={15} scrollWheelZoom={false} style={{ height: '100%', width: '100%' }}>
                 <TileLayer

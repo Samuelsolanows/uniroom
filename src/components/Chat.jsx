@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, query, orderBy, onSnapshot, addDoc, serverTimestamp, doc, updateDoc, getDoc } from 'firebase/firestore';
-import { Send, ArrowLeft, User } from 'lucide-react';
+import { Send, ArrowLeft, User, CheckCircle2 } from 'lucide-react';
 
 export default function Chat() {
   const { chatId } = useParams();
@@ -92,8 +92,9 @@ export default function Chat() {
         </div>
         
         <div>
-          <h2 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)' }}>
+          <h2 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
             {otherUser?.name || 'Usuario'}
+            {otherUser?.isVerified && <CheckCircle2 size={16} color="#16a34a" title="Usuario Verificado" />}
           </h2>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
             {isOwner ? 'Interesado en:' : 'Propietario de:'} <Link to={`/room/${chatInfo.roomId}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>{chatInfo.roomTitle}</Link>

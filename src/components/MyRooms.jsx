@@ -3,11 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { auth, db } from '../firebase';
 import { collection, query, where, getDocs, doc, updateDoc, addDoc } from 'firebase/firestore';
 import { Home, CheckCircle2, Ban, PlusCircle, Edit } from 'lucide-react';
+import SkeletonLoader from './SkeletonLoader';
+import { useAuth } from '../hooks/useAuth';
 
 export default function MyRooms() {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { userData } = useAuth();
 
   const fetchRooms = async () => {
     if (!auth.currentUser) return;
@@ -81,7 +84,12 @@ export default function MyRooms() {
     }
   };
 
-  if (loading) return <div className="container" style={{ padding: '4rem 0', textAlign: 'center' }}>Cargando...</div>;
+  if (loading) return (
+    <div className="container" style={{ padding: '3rem 0', maxWidth: '1000px' }}>
+      <div style={{ height: '40px', width: '300px', background: 'var(--border)', borderRadius: 'var(--radius-md)', marginBottom: '2rem', animation: 'pulse 1.5s infinite ease-in-out' }}></div>
+      <SkeletonLoader count={3} />
+    </div>
+  );
 
   const totalRooms = rooms.length;
   const availableRooms = rooms.filter(r => r.status === 'disponible').length;
@@ -91,7 +99,10 @@ export default function MyRooms() {
     <div className="container" style={{ padding: '3rem 0', maxWidth: '1000px' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1.5rem', marginBottom: '2rem' }}>
         <div style={{ flex: '1 1 300px' }}>
-          <h2 style={{ color: 'var(--primary)', margin: 0, fontSize: '1.8rem', lineHeight: '1.2' }}>Dashboard de Publicaciones</h2>
+          <h2 style={{ color: 'var(--primary)', margin: 0, fontSize: '1.8rem', lineHeight: '1.2', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+            Dashboard de Publicaciones
+            {userData?.isVerified && <CheckCircle2 size={24} color="#16a34a" title="Anfitrión Verificado" />}
+          </h2>
           <p style={{ color: 'var(--text-secondary)', margin: '0.5rem 0 0' }}>Administra tus habitaciones publicadas</p>
         </div>
         <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>

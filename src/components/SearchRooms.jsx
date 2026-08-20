@@ -40,7 +40,10 @@ export default function SearchRooms() {
         const usersSnapshot = await getDocs(collection(db, 'users'));
         const usersMap = {};
         usersSnapshot.forEach(userDoc => {
-          usersMap[userDoc.id] = userDoc.data().name || userDoc.id.substring(0, 6);
+          usersMap[userDoc.id] = {
+            name: userDoc.data().name || userDoc.id.substring(0, 6),
+            isVerified: userDoc.data().isVerified || false
+          };
         });
 
         const reviewsSnapshot = await getDocs(collection(db, 'reviews'));
@@ -54,7 +57,8 @@ export default function SearchRooms() {
 
         const enrichedRooms = roomsData.map(room => ({
           ...room,
-          ownerName: usersMap[room.ownerId] || room.ownerId.substring(0, 6),
+          ownerName: usersMap[room.ownerId]?.name || room.ownerId.substring(0, 6),
+          ownerVerified: usersMap[room.ownerId]?.isVerified || false,
           averageRating: ratingsMap[room.id] ? (ratingsMap[room.id].sum / ratingsMap[room.id].count).toFixed(1) : null
         }));
 
@@ -207,7 +211,10 @@ export default function SearchRooms() {
                         <h4 className="text-truncate" style={{ fontSize: '1.05rem', margin: '0 0 0.15rem 0', color: 'var(--text-primary)' }}>{room.title}</h4>
                         {room.verified && <CheckCircle2 size={16} color="#0284c7" />}
                       </div>
-                      <p className="text-truncate" style={{ color: 'var(--text-secondary)', margin: '0 0 0.25rem 0', fontSize: '0.95rem' }}>Anfitrión: {room.ownerName}</p>
+                      <p className="text-truncate" style={{ color: 'var(--text-secondary)', margin: '0 0 0.25rem 0', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                        Anfitrión: {room.ownerName}
+                        {room.ownerVerified && <CheckCircle2 size={14} color="#16a34a" />}
+                      </p>
                       <p style={{ margin: 0, fontSize: '1.05rem' }}>
                         <span style={{ fontWeight: '600', color: 'var(--text-primary)' }}>${room.price.toLocaleString('es-CO')}</span> <span style={{ color: 'var(--text-secondary)' }}>mes</span>
                       </p>
